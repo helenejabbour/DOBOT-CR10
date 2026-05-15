@@ -1,0 +1,31 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+COLCON_IGNORE
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# LaTeX (if applicable)
+*.aux
+*.log
+*.pdf
+*.synctex.gz

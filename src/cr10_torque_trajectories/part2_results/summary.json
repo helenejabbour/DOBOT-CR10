@@ -1,0 +1,237 @@
+{
+  "urdf": "/home/helene/ros2_ws/src/DOBOT_6Axis_ROS2_V4/dobot_rviz/urdf/cr10_robot.urdf",
+  "pinocchio_model": {
+    "nq": 6,
+    "nv": 6,
+    "joint_order": [
+      "joint1",
+      "joint2",
+      "joint3",
+      "joint4",
+      "joint5",
+      "joint6"
+    ],
+    "end_effector_frame": "Link6"
+  },
+  "equations_of_motion": {
+    "equation": "tau = M(q) q_ddot + C(q, q_dot) q_dot + g(q)",
+    "terms": {
+      "M(q)": "Joint-space inertia matrix (resistance to acceleration).",
+      "C(q, q_dot) q_dot": "Coriolis and centrifugal torques from motion coupling.",
+      "g(q)": "Gravity compensation torque.",
+      "tau": "Required actuator joint torque vector."
+    },
+    "inverse_dynamics_solver": "pinocchio.rnea"
+  },
+  "requirements_coverage": {
+    "part_a_cartesian_and_ik": {
+      "time_vector": "Implemented in _time_vector.",
+      "quintic_s_sdot_sddot": "Implemented in _quintic_scaling.",
+      "straight_path": "Implemented in generate_straight_trajectory.",
+      "circular_path": "Implemented in generate_circle_trajectory.",
+      "ik_q_t": "Implemented in compute_joint_positions.",
+      "stored_outputs": "Saved in *_data.npz (x, x_dot, x_ddot, q, s, s_dot, s_ddot)."
+    },
+    "part_b_jacobian_kinematics": {
+      "pinocchio_model_loading": "Implemented in load_pinocchio_model.",
+      "jacobian_Jp": "getFrameJacobian(..., LOCAL_WORLD_ALIGNED) with translational rows.",
+      "velocity_q_dot": "Computed by damped least-squares pseudoinverse.",
+      "jacobian_time_derivative_Jp_dot": "computeJointJacobiansTimeVariation + getFrameJacobianTimeVariation.",
+      "acceleration_q_ddot": "Computed from x_ddot - Jp_dot q_dot via DLS.",
+      "consistent_frame_usage": "Jp and Jp_dot both in LOCAL_WORLD_ALIGNED."
+    },
+    "part_c_dynamics_and_torque": {
+      "inverse_dynamics_tau_t": "Implemented in compute_torque_trajectory via rnea.",
+      "required_plots": "Cartesian, q, q_dot, q_ddot, tau per duration/trajectory and torque-duration comparisons.",
+      "duration_study": "Computed for all durations in --durations."
+    }
+  },
+  "duration_effect": {
+    "straight": {
+      "trajectory": "straight",
+      "durations": [
+        {
+          "duration_s": 3.0,
+          "max_abs_q_dot": [
+            0.8442074179637827,
+            0.07992364515260394,
+            0.2018378064196558,
+            0.018511886165971842,
+            0.1774594724243338,
+            0.0
+          ],
+          "max_abs_q_ddot": [
+            0.9520955702600863,
+            0.28385509896064537,
+            0.5236678187179231,
+            0.04201865760620829,
+            0.23868105496236353,
+            0.0
+          ],
+          "max_abs_tau": [
+            2.9820479265409445,
+            65.06492729105425,
+            3.914900503592017,
+            1.3997656513518968,
+            0.0036904650281900653,
+            0.0001424793781185142
+          ],
+          "global_max_abs_q_dot": 0.8442074179637827,
+          "global_max_abs_q_ddot": 0.9520955702600863,
+          "global_max_abs_tau": 65.06492729105425
+        },
+        {
+          "duration_s": 6.0,
+          "max_abs_q_dot": [
+            0.4221694338559428,
+            0.040173119943268096,
+            0.10093134897905713,
+            0.00930842091717086,
+            0.08868149751383181,
+            0.0
+          ],
+          "max_abs_q_ddot": [
+            0.23759918329283064,
+            0.0711421281570452,
+            0.1310322571102531,
+            0.01043214123394287,
+            0.05961640143318024,
+            0.0
+          ],
+          "max_abs_tau": [
+            0.748633815502261,
+            64.84029182477798,
+            3.5540629780160082,
+            1.3979132846647193,
+            0.0019944356278488867,
+            5.407169091683673e-05
+          ],
+          "global_max_abs_q_dot": 0.4221694338559428,
+          "global_max_abs_q_ddot": 0.23759918329283064,
+          "global_max_abs_tau": 64.84029182477798
+        }
+      ]
+    },
+    "circle": {
+      "trajectory": "circle",
+      "durations": [
+        {
+          "duration_s": 3.0,
+          "max_abs_q_dot": [
+            1.4856164808945629,
+            0.4712816554624296,
+            0.7212341093381143,
+            0.10201344282018056,
+            0.43307681271013365,
+            0.0
+          ],
+          "max_abs_q_ddot": [
+            6.935154945617668,
+            4.260956288107437,
+            3.9437301412642887,
+            1.1178853477257091,
+            2.555547018443038,
+            0.0
+          ],
+          "max_abs_tau": [
+            19.01628589421004,
+            68.37775907978187,
+            13.036513258869665,
+            1.659837250067811,
+            0.010269668346521488,
+            0.0010251218981166587
+          ],
+          "global_max_abs_q_dot": 1.4856164808945629,
+          "global_max_abs_q_ddot": 6.935154945617668,
+          "global_max_abs_tau": 68.37775907978187
+        },
+        {
+          "duration_s": 6.0,
+          "max_abs_q_dot": [
+            0.7423429100563362,
+            0.2350016421273035,
+            0.3614170095927189,
+            0.051352532014833266,
+            0.21680489007382936,
+            0.0
+          ],
+          "max_abs_q_ddot": [
+            1.7334778690064367,
+            1.0698904625668522,
+            0.9878625532207899,
+            0.284556599429838,
+            0.6380594621627595,
+            0.0
+          ],
+          "max_abs_tau": [
+            4.758067242700504,
+            67.90161363806786,
+            9.843598001998489,
+            1.5746896705532223,
+            0.003772238809696002,
+            0.00023233283627512502
+          ],
+          "global_max_abs_q_dot": 0.7423429100563362,
+          "global_max_abs_q_ddot": 1.7334778690064367,
+          "global_max_abs_tau": 67.90161363806786
+        }
+      ]
+    }
+  },
+  "duration_discussion": {
+    "straight": {
+      "comparison": {
+        "fast_duration_s": 3.0,
+        "slow_duration_s": 6.0,
+        "global_velocity_peak_ratio_fast_over_slow": 1.9996886327205117,
+        "global_acceleration_peak_ratio_fast_over_slow": 4.0071500123242005,
+        "global_torque_peak_ratio_fast_over_slow": 1.0034644425549983,
+        "per_joint_delta_max_abs_tau": [
+          -2.2334141110386834,
+          -0.2246354662762684,
+          -0.36083752557600857,
+          -0.0018523666871774758,
+          -0.0016960294003411786,
+          -8.840768720167746e-05
+        ]
+      },
+      "answers": {
+        "q1_velocity_vs_duration": "Increasing duration reduces joint velocity peaks; fast/slow peak ratio=2.000 (>1 confirms faster = higher peaks).",
+        "q2_acceleration_vs_duration": "Increasing duration strongly reduces joint acceleration peaks; fast/slow peak ratio=4.007 (>1 confirms faster = higher peaks).",
+        "q3_max_torque_vs_duration": "Increasing duration reduces maximum required torque; fast/slow peak ratio=1.003 (>1 confirms faster = higher peaks).",
+        "q4_torque_shape_vs_duration": "Longer duration preserves the overall torque profile shape but reduces dynamic peaks and sharp transitions; gravity-driven baseline components remain in similar regions.",
+        "q5_most_affected_joints": "Most affected joints by duration change (largest |\u0394 max| torque): joint1, joint3, joint2."
+      }
+    },
+    "circle": {
+      "comparison": {
+        "fast_duration_s": 3.0,
+        "slow_duration_s": 6.0,
+        "global_velocity_peak_ratio_fast_over_slow": 2.0012536804343153,
+        "global_acceleration_peak_ratio_fast_over_slow": 4.00071732648807,
+        "global_torque_peak_ratio_fast_over_slow": 1.0070122846307008,
+        "per_joint_delta_max_abs_tau": [
+          -14.258218651509535,
+          -0.4761454417140101,
+          -3.192915256871176,
+          -0.08514757951458862,
+          -0.006497429536825486,
+          -0.0007927890618415336
+        ]
+      },
+      "answers": {
+        "q1_velocity_vs_duration": "Increasing duration reduces joint velocity peaks; fast/slow peak ratio=2.001 (>1 confirms faster = higher peaks).",
+        "q2_acceleration_vs_duration": "Increasing duration strongly reduces joint acceleration peaks; fast/slow peak ratio=4.001 (>1 confirms faster = higher peaks).",
+        "q3_max_torque_vs_duration": "Increasing duration reduces maximum required torque; fast/slow peak ratio=1.007 (>1 confirms faster = higher peaks).",
+        "q4_torque_shape_vs_duration": "Longer duration preserves the overall torque profile shape but reduces dynamic peaks and sharp transitions; gravity-driven baseline components remain in similar regions.",
+        "q5_most_affected_joints": "Most affected joints by duration change (largest |\u0394 max| torque): joint1, joint3, joint2."
+      }
+    }
+  },
+  "artifacts": {
+    "per_run_data_files": "*.npz",
+    "per_run_plots": "*_cartesian.png, *_q.png, *_qdot.png, *_qddot.png, *_tau.png",
+    "duration_comparison_plots": "*_torque_duration_comparison.png",
+    "summary_file": "summary.json"
+  }
+}
