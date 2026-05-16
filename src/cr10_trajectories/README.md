@@ -52,18 +52,23 @@ colcon build --packages-select cr10_trajectories
 source install/setup.bash
 ```
 
-Start trajectory controller + GUI:
+Run in separate terminals and in order:
 
 ```bash
-ros2 launch cr10_trajectories cr10_rviz.launch.py
-```
+# Terminal 1
+ros2 launch dobot_rviz dobot_rviz.launch.py
 
-`cr10_ik_trajectory.launch.py` is kept as an alias for the same launch description.
+# Terminal 2
+rviz2 -d ~/ros2_ws/cr10.rviz
 
-Optional: reset robot to zero joint pose:
-
-```bash
+# Terminal 3
 ros2 run cr10_trajectories initial_pose
+
+# Terminal 4
+ros2 run cr10_trajectories trajectory_node
+
+# Terminal 5
+ros2 run cr10_trajectories gui_node
 ```
 
 ## RViz setup notes
