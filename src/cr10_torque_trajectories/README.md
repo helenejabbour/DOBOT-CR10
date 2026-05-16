@@ -1,39 +1,42 @@
-# CR10 Torque Trajectory Computation (Part 2)
+# CR10 Torque Trajectory Computation — Part 2
 
-This package computes CR10 joint torque trajectories from desired Cartesian end-effector trajectories using:
+Computes joint torque trajectories $\tau(t)$ for the Dobot CR10 from desired Cartesian end-effector paths. The full pipeline is:
 
-1. Quintic time-scaled Cartesian path generation (straight and circular).
-2. Inverse kinematics for joint positions `q(t)`.
-3. Pinocchio Jacobian and Jacobian time derivative for `q_dot(t)` and `q_ddot(t)`.
-4. Pinocchio inverse dynamics (RNEA) for torques `tau(t)`.
-5. Required plots for trajectory, joint states, torques, and duration comparison.
+$$\mathbf{x}_d(t),\,\dot{\mathbf{x}}_d(t),\,\ddot{\mathbf{x}}_d(t) \;\longrightarrow\; \mathbf{q}(t),\,\dot{\mathbf{q}}(t),\,\ddot{\mathbf{q}}(t) \;\longrightarrow\; \boldsymbol{\tau}(t)$$
 
-## Requirements coverage
+Two trajectories are studied — straight-line and circular — each evaluated at two motion durations to characterize the effect of timing on actuator torque requirements.
 
-The implementation in `cr10_torque_trajectories/torque_pipeline.py` covers:
+---
 
-- **Part A**: time vector, quintic `s/s_dot/s_ddot`, straight and circular Cartesian trajectories, IK-based `q(t)`.
-- **Part B**: Pinocchio CR10 model loading, translational Jacobian `Jp`, Jacobian derivative `Jp_dot`, Jacobian-based `q_dot(t)` and `q_ddot(t)` in a consistent `LOCAL_WORLD_ALIGNED` frame.
-- **Part C**: inverse dynamics torques with `pinocchio.rnea`, per-joint torque plots, and multi-duration comparison.
+## Pipeline
 
-The run output writes:
+| Stage | What it does | Key implementation |
+|---|---|---|
+| **Part A** | Cartesian trajectory generation + IK | Quintic time scaling; nullspace-regularized DLS IK via Pinocchio |
+| **Part B** | Joint velocity and acceleration | Translational Jacobian pseudoinverse; Jacobian time derivative in `LOCAL_WORLD_ALIGNED` |
+| **Part C** | Torque computation | Pinocchio RNEA; RNEA boundary sanity check at $t=0$ and $t=T$ |
 
-- `*_data.npz` with `time, s, s_dot, s_ddot, x, x_dot, x_ddot, q, q_dot, q_ddot, tau`
-- Required figures:
-  - `*_cartesian.png`
-  - `*_q.png`
-  - `*_qdot.png`
-  - `*_qddot.png`
-  - `*_tau.png`
-  - `straight_torque_duration_comparison.png`
-  - `circle_torque_duration_comparison.png`
-- `summary.json` containing:
-  - detected Pinocchio model info (`nq`, `nv`, joint order, end-effector frame)
-  - equations of motion + physical meaning of each term
-  - duration-effect metrics and direct answers to the 5 required discussion questions
-  - structured requirement coverage checklist
+### Design decisions
 
-## Run
+- **Single Pinocchio model** throughout — no parallel symbolic model. FK, Jacobian, Jacobian time derivative, and RNEA all use the same URDF-based model, eliminating numerical mismatch between pipeline stages.
+- **Position-only IK with nullspace regularization** — the 3-DOF task leaves a 3-DOF nullspace. A secondary joint-space objective pulls each solution toward the previous configuration, preventing wrist discontinuities without imposing an orientation target.
+- **Damped least-squares (DLS)** — IK uses $\lambda = 10^{-2}$; Jacobian pseudoinverse uses $\lambda = 10^{-3}$. These are deliberately different: IK needs heavier regularization to converge stably across candidate seeds.
+- **Single-pass velocity/acceleration loop** — $\dot{\mathbf{q}}_k$ is computed first, then immediately used to evaluate $\dot{J}_p$ for $\ddot{\mathbf{q}}_k$ in the same time step, ensuring frame consistency.
+- **IK validation at 5 mm** — every accepted solution is checked against `IK_POSITION_TOL = 0.005 m` before entering the dynamics pipeline.
+- **RNEA boundary check** — at $t=0$ and $t=T$ the quintic guarantees $\dot{\mathbf{q}} = \ddot{\mathbf{q}} = \mathbf{0}$, so $\boldsymbol{\tau} = \mathbf{g}(\mathbf{q})$ exactly. A warning is raised if this is violated beyond 0.5 N·m.
+
+---
+
+## Requirements
+
+- ROS 2 (tested on Humble)
+- `python3-pinocchio`
+- `numpy`, `scipy`, `matplotlib`
+- Dobot CR10 URDF (from `DOBOT_6Axis_ROS2_V4`)
+
+---
+
+## Build and run
 
 ```bash
 cd ~/ros2_ws
@@ -42,7 +45,24 @@ source install/setup.bash
 ros2 run cr10_torque_trajectories compute_torque_trajectories
 ```
 
-## Optional arguments
+The URDF is located automatically. If auto-detection fails, pass it explicitly with `--urdf`.
+
+### CLI arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--durations` | `3.0 6.0` | Motion durations in seconds (minimum two required) |
+| `--dt` | `0.01` | Time step [s] |
+| `--damping` | `1e-3` | DLS damping factor for Jacobian pseudoinverse |
+| `--urdf` | auto | Path to `cr10_robot.urdf` |
+| `--ee-frame` | auto | Pinocchio end-effector frame name (default: `Link6`) |
+| `--output-dir` | `torque_results` | Directory for all output files |
+| `--line-a` | `0.45 -0.30 0.45` | Straight-line start point [m] |
+| `--line-b` | `0.45 0.30 0.45` | Straight-line end point [m] |
+| `--circle-center` | `0.50 0.00 0.45` | Circle center [m] |
+| `--circle-radius` | `0.12` | Circle radius [m] |
+
+Full example:
 
 ```bash
 ros2 run cr10_torque_trajectories compute_torque_trajectories -- \
@@ -54,6 +74,53 @@ ros2 run cr10_torque_trajectories compute_torque_trajectories -- \
   --output-dir torque_results
 ```
 
-Outputs are saved to `torque_results/` by default.
+The URDF can also be set via environment variable:
 
-> Note: the duration study enforces **at least two different durations** (e.g., `--durations 3 6`).
+```bash
+export CR10_URDF=~/ros2_ws/src/DOBOT_6Axis_ROS2_V4/dobot_rviz/urdf/cr10_robot.urdf
+```
+
+---
+
+## Outputs
+
+All outputs are written to `--output-dir` (default: `torque_results/`).
+
+### Per trajectory and duration
+
+| File | Contents |
+|---|---|
+| `*_data.npz` | `time, s, s_dot, s_ddot, x, x_dot, x_ddot, q, q_dot, q_ddot, tau` |
+| `*_cartesian.png` | Cartesian position components + XY path projection |
+| `*_q.png` | Joint positions $q_i(t)$ |
+| `*_qdot.png` | Joint velocities $\dot{q}_i(t)$ |
+| `*_qddot.png` | Joint accelerations $\ddot{q}_i(t)$ |
+| `*_tau.png` | Joint torques $\tau_i(t)$ |
+
+### Across durations
+
+| File | Contents |
+|---|---|
+| `straight_torque_duration_comparison.png` | Torque overlay for all durations, straight-line |
+| `circle_torque_duration_comparison.png` | Torque overlay for all durations, circular |
+
+### Summary
+
+`summary.json` contains:
+- Pinocchio model info: `nq`, `nv`, joint order, end-effector frame
+- Equations of motion terms and their physical meaning
+- Per-joint peak values for $\dot{q}$, $\ddot{q}$, $\tau$ at each duration
+- Quantitative answers to the five duration-study discussion questions
+- Requirement coverage checklist for Parts A, B, and C
+
+---
+
+## Package structure
+
+```
+cr10_torque_trajectories/
+├── torque_pipeline.py   # Main pipeline: trajectory gen, IK, Jacobians, RNEA, plots
+├── ik_solver.py         # IK candidate search, scoring, warm-start strategy
+├── ik_model.py          # Core DLS IK loop with nullspace regularization
+└── __init__.py
+```
