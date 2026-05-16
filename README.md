@@ -98,7 +98,3 @@ DOBOT-CR10/
 See individual package READMEs:
 - [cr10_trajectories/README.md](src/cr10_trajectories/README.md)
 - [cr10_torque_trajectories/README.md](src/cr10_torque_trajectories/README.md)
-
-## License
-
-MIT
