@@ -102,7 +102,3 @@ See individual package READMEs:
 ## License
 
 MIT
-
-## Author
-
-Helène — Music Technology & Robotics Research
