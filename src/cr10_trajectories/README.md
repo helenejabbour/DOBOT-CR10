@@ -55,8 +55,10 @@ source install/setup.bash
 Start trajectory controller + GUI:
 
 ```bash
-ros2 launch cr10_trajectories cr10_ik_trajectory.launch.py
+ros2 launch cr10_trajectories cr10_rviz.launch.py
 ```
+
+`cr10_ik_trajectory.launch.py` is kept as an alias for the same launch description.
 
 Optional: reset robot to zero joint pose:
 
